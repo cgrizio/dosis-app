@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Suplementos Diarios</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F2F2F7;
+  --surface: #FFFFFF;
+  --ink: #000000;
+  --ink-2: #3C3C43;
+  --ink-3: #8E8E93;
+  --border: #E5E5EA;
+  --accent: #E0444A;
+  --accent-light: #FDEAEA;
+  --check: #34C759;
+  --check-bg: #E8F8ED;
+  --check-dark: #248A3D;
+  --blue: #007AFF;
+  --blue-light: #E8F2FF;
+  --pill-icon-bg: #D6E8FB;
+  --morning: #FFF3E0;
+  --morning-dot: #E65100;
+  --midday: #E8F5E9;
+  --midday-dot: #2E7D32;
+  --afternoon: #E3F2FD;
+  --afternoon-dot: #1565C0;
+  --night: #F3E5F5;
+  --night-dot: #6A1B9A;
+  --sleep: #1C1C1E;
+  --sleep-dot: #9B59B6;
+  --sleep-surface: #2C2C2E;
+  --sleep-text: #F2F2F7;
+  --sleep-sub: #AEAEB2;
+  --paused-dot: #AEAEB2;
+  --radius: 14px;
+  --radius-sm: 10px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+.card:active, .card { -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Sora', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+#week-calendar-wrap { display: contents; }
+
+/* HEADER */
+header {
+  background: var(--bg);
+  padding: 36px 0 0;
+}
+body.edit-mode header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding-bottom: 8px;
+  box-shadow: 0 1px 0 var(--border);
+}
+body.edit-mode .content > .block:first-child {
+  margin-top: 16px;
+}
+.header-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 0 20px;
+}
+.header-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+header h1 { display: none; }
+.header-day-label {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.header-count {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-top: 2px;
+}
+.header-progress-wrap {
+  margin: 8px 20px 24px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+body.edit-mode .header-progress-wrap { display: none; }
+.header-progress-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.header-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.header-progress-fill {
+  height: 100%;
+  background: var(--check);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+/* HEADER ICON BUTTONS */
+.header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: opacity 0.15s;
+  width: 40px; height: 40px;
+}
+.header-icon-btn:active { opacity: 0.5; }
+
+/* EDIT MODE TOGGLE */
+.edit-toggle-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: opacity 0.15s;
+}
+.edit-toggle-btn:active { opacity: 0.6; }
+.edit-toggle-btn .edit-icon {
+  width: 32px; height: 32px;
+  background: transparent;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+body.edit-mode .edit-toggle-btn .edit-icon { background: var(--blue-light); }
+
+
+
+/* EDIT MODE BANNER — hidden, replaced by title */
+.edit-banner { display: none !important; }
+body.edit-mode .edit-banner { display: block; }
+body.edit-mode .header-day-label { display: none; }
+body.edit-mode .header-count { display: none; }
+body.edit-mode .header-title-row { align-items: center; }
+body.edit-mode #edit-toggle-label { padding: 0 !important; }
+body.edit-mode #history-btn { display: none; }
+body.edit-mode .header-title-block::before {
+  content: 'Editar suplementos';
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  display: block;
+}
+
+
+
+/* SUMMARY CARD — now inline in header */
+.summary-card { display: none; }
+
+.ring-wrap { position: relative; width: 58px; height: 58px; flex-shrink: 0; }
+.ring-wrap svg { transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--border); stroke-width: 4; }
+.ring-fill { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s cubic-bezier(.4,0,.2,1); }
+.ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-num { font-size: 1rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.ring-pct { font-size: 0.55rem; color: var(--ink-3); font-weight: 500; }
+
+/* CONTENT */
+.content { padding: 0; }
+
+/* BLOCK */
+.block { margin-bottom: 24px; }
+.block-label {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 8px;
+  padding: 0 20px;
+}
+.block-dot { display: none; }
+.block-title { font-size: 0.72rem; font-weight: 700; color: #636366; letter-spacing: 0.05em; text-transform: uppercase; }
+.block-sub { font-size: 0.63rem; color: var(--ink-3); margin-left: auto; }
+
+/* CARDS LIST */
+.cards-list {
+  background: var(--surface);
+  border-radius: var(--radius);
+  margin: 0 20px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* VIEW MODE: cards independientes */
+body:not(.edit-mode) .cards-list {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+body:not(.edit-mode) .cards-list .card {
+  border-radius: var(--radius);
+  border-bottom: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+body:not(.edit-mode) .cards-list .card:last-child {
+  border-bottom: none;
+}
+.block-sleep .cards-list { background: var(--surface); }
+
+/* EDIT MODE: cards list becomes transparent, cards float individually */
+body.edit-mode .cards-list {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* drop zone for drag-and-drop */
+.drop-zone {
+  display: none;
+}
+.freq-opt { font-family:'Sora',sans-serif; font-size:0.75rem; font-weight:600; padding:6px 14px; border-radius:20px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink-3); cursor:pointer; transition:all 0.15s; }
+.freq-opt.selected { background:var(--accent); border-color:var(--accent); color:white; }
+
+.drop-zone {
+  display: block;
+  height: 20px;
+  border-radius: 3px;
+  margin: -8px 0;
+  transition: height 0.12s, background 0.12s;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+body.edit-mode .drop-zone.drag-over-active {
+  height: 72px;
+  margin: 0;
+  background: var(--accent-light);
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--accent);
+}
+
+/* ghost card that follows the finger */
+#drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.92;
+  transform: scale(1.03);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+  border-radius: var(--radius);
+  left: 0; top: 0;
+}
+
+/* CARD */
+.card {
+  padding: 13px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  position: relative;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s, box-shadow 0.15s, opacity 0.15s;
+  min-height: 68px;
+  background: var(--surface);
+  -webkit-tap-highlight-color: transparent;
+}
+body:not(.edit-mode) .card { cursor: default; transition: opacity 0.15s; }
+body:not(.edit-mode) .card:active { background: var(--surface) !important; opacity: 1 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important; }
+.block-sleep .card { border-bottom-color: var(--border); background: var(--surface); }
+.card:last-child { border-bottom: none; }
+
+/* EDIT MODE: individual floating cards */
+body.edit-mode .card {
+  border-radius: var(--radius);
+  border-bottom: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: var(--surface);
+  cursor: grab;
+}
+
+body.edit-mode .card:active { opacity: 0.85; cursor: grabbing; }
+body.edit-mode .card.dragging {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* DEFAULT MODE — tappable to check */
+body:not(.edit-mode) .card { cursor: pointer; }
+body:not(.edit-mode) .card:active { background: rgba(0,0,0,0.04); }
+
+.card.done { background: var(--surface); }
+.card.done .card-name { color: var(--ink-3); text-decoration: line-through; text-decoration-color: #aaa; }
+.card.done .card-icon { filter: grayscale(1) opacity(0.5); }
+.card.done .tag { background: var(--border) !important; color: var(--ink-3) !important; }
+.card.situational { opacity: 0.75; }
+.card.situational.done { opacity: 1; }
+
+.card-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--pill-icon-bg);
+}
+.card-icon svg { width: 28px; height: 28px; display: block; }
+
+.card-body { flex: 1; min-width: 0; padding-right: 4px; }
+.card-name { font-weight: 600; font-size: 0.88rem; color: var(--ink); line-height: 1.3; }
+.card-reason { font-size: 0.72rem; color: var(--ink-3); margin-top: 2px; line-height: 1.4; }
+.tag {
+  display: inline-flex; align-items: center;
+  font-size: 0.6rem; font-weight: 600;
+  padding: 2px 7px; border-radius: 20px;
+  margin-top: 5px; letter-spacing: 0.03em; text-transform: uppercase;
+}
+
+/* STATUS badge — hidden */
+.status-badge { display: none !important; }
+
+/* CHECK (default mode) */
+.check-circle {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 7px;
+  transition: all 0.2s cubic-bezier(.4,0,.2,1);
+}
+body.edit-mode .check-circle { display: none; }
+.card.done .check-circle { background: #3A7D52; border-color: #3A7D52; }
+.check-circle svg { opacity: 0; transform: scale(0.4); transition: all 0.18s cubic-bezier(.4,0,.2,1); }
+.card.done .check-circle svg { opacity: 1; transform: scale(1); }
+
+/* DRAG HANDLE — hidden */
+.drag-handle { display: none; }
+
+/* edit mode chevron indicator — hidden */
+.card-edit-chevron { display: none; }
+
+/* MANAGE BTN (edit mode only) */
+.manage-btn {
+  display: none;
+  align-items: center; justify-content: center; gap: 6px;
+  width: calc(100% - 40px);
+  margin: 8px 20px 0;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  padding: 13px;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.78rem; font-weight: 600; color: var(--blue);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.manage-btn:active { opacity: 0.7; }
+body.edit-mode .manage-btn { display: flex; }
+
+/* PAUSED */
+.paused-section { margin: 0 0 28px; }
+.paused-toggle {
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; padding: 8px 20px;
+  user-select: none; margin-bottom: 8px;
+}
+.paused-toggle-dot { display:none; }
+.paused-toggle-title { font-size:0.65rem; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.06em; }
+.paused-toggle-count { background:var(--border); color:var(--ink-3); font-size:0.6rem; font-weight:600; padding:1px 7px; border-radius:20px; }
+.paused-chevron { margin-left:auto; color:var(--ink-3); font-size:0.7rem; transition:transform 0.2s; }
+.paused-chevron.open { transform:rotate(180deg); }
+.paused-list { display:none; }
+.paused-list.open { display:block; }
+body.edit-mode .paused-list { display:block; }
+.paused-cards-list { background:var(--surface); border-radius:var(--radius); margin:0 20px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+.paused-card { display:flex; align-items:center; gap:13px; padding:13px 16px; border-bottom:1px solid var(--border); opacity:0.6; }
+.paused-card:last-child { border-bottom:none; }
+.paused-card-icon { width:40px; height:40px; border-radius:10px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.paused-card-info { flex:1; min-width:0; }
+.paused-card-name { font-size:0.88rem; font-weight:600; color:var(--ink-3); }
+.paused-card-block { font-size:0.68rem; color:var(--ink-3); margin-top:2px; }
+.reactivar-btn { background:none; border:1.5px solid var(--border); border-radius:8px; padding:5px 10px; font-family:'Sora',sans-serif; font-size:0.65rem; font-weight:600; color:var(--blue); cursor:pointer; white-space:nowrap; }
+.reactivar-btn:active { background:var(--blue-light); }
+
+/* MODALS */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.4);
+  z-index:200;
+  display:flex; align-items:flex-end;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.2s;
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal-sheet {
+  background:var(--surface);
+  border-radius:20px 20px 0 0;
+  padding:24px 20px 0;
+  width:100%; max-width:640px;
+  margin:0 auto;
+  transform:translateY(100%);
+  transition:transform 0.3s cubic-bezier(.4,0,.2,1);
+  max-height:90vh;
+  display:flex; flex-direction:column;
+  touch-action: pan-y;
+}
+.modal-sheet-scroll {
+  flex:1; overflow-y:auto;
+  padding-bottom:8px;
+}
+.modal-sheet-footer {
+  padding:12px 0 calc(env(safe-area-inset-bottom, 0px) + 20px);
+  border-top:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0;
+}
+.modal-sheet.swiping {
+  transition: none;
+}
+.modal-overlay.open .modal-sheet { transform:translateY(0); }
+.modal-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+.modal-sheet h3 { font-size:1rem; font-weight:700; margin-bottom:4px; letter-spacing:-0.02em; }
+.modal-sub { font-size:0.75rem; color:var(--ink-3); margin-bottom:18px; }
+.modal-sheet textarea { width:100%; min-height:100px; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:12px; font-family:'Sora',sans-serif; font-size:0.84rem; color:var(--ink); background:var(--bg); resize:vertical; outline:none; line-height:1.5; }
+.modal-sheet textarea:focus { border-color:var(--blue); }
+.modal-actions { display:flex; gap:8px; margin-top:12px; }
+
+.btn-primary { flex:1; background:var(--accent); color:white; border:none; border-radius:var(--radius-sm); padding:13px; font-family:'Sora',sans-serif; font-size:0.84rem; font-weight:600; cursor:pointer; }
+.btn-primary:active { opacity:0.85; }
+.btn-secondary { background:var(--bg); color:var(--ink-2); border:none; border-radius:var(--radius-sm); padding:13px 18px; font-family:'Sora',sans-serif; font-size:0.84rem; font-weight:500; cursor:pointer; }
+.btn-secondary:active { opacity:0.7; }
+.btn-pause { flex:1; background:var(--bg); border:none; border-radius:var(--radius-sm); padding:13px; font-family:'Sora',sans-serif; font-size:0.84rem; font-weight:500; color:var(--ink-3); cursor:pointer; }
+.btn-pause:active { opacity:0.7; }
+.btn-danger { flex:1; background:var(--accent-light); border:none; border-radius:var(--radius-sm); padding:13px; font-family:'Sora',sans-serif; font-size:0.84rem; font-weight:600; color:var(--accent); cursor:pointer; }
+.btn-danger:active { opacity:0.7; }
+
+.form-row { margin-bottom:14px; }
+.form-label { display:block; font-size:0.7rem; font-weight:600; color:var(--ink-3); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.04em; }
+.form-input, .form-select { width:100%; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-family:'Sora',sans-serif; font-size:16px; color:var(--ink); background:var(--bg); outline:none; }
+.form-input:focus, .form-select:focus { border-color:var(--blue); }
+.form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.edit-actions-row { display:flex; gap:8px; margin-top:8px; }
+
+/* PILL PICKER */
+.pill-picker { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+.pill-opt {
+  width:48px; height:48px;
+  border-radius:12px;
+  border:2px solid var(--border);
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  transition:border-color 0.15s, background 0.15s;
+  flex-shrink:0;
+}
+.pill-opt:active { opacity:0.7; }
+.pill-opt.selected {
+  border-color:var(--accent);
+  background:var(--accent-light);
+}
+.pill-opt svg { display:block; }
+
+.manage-list { margin-top:16px; }
+.manage-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.manage-item:last-child { border-bottom:none; }
+.manage-item-info { flex:1; }
+.manage-item-name { font-size:0.84rem; font-weight:500; }
+.manage-item-block { font-size:0.7rem; color:var(--ink-3); }
+.manage-delete { background:none; border:none; color:var(--accent); font-size:1rem; cursor:pointer; padding:4px 8px; }
+
+.completed-banner { background:var(--surface); border-radius:var(--radius); padding:20px; text-align:center; margin:0 20px 28px; box-shadow:0 1px 3px rgba(0,0,0,0.06); display:none; }
+.completed-banner.show { display:block; }
+.completed-banner .emoji { font-size:1.8rem; margin-bottom:6px; }
+.completed-banner p { font-size:0.84rem; color:var(--check-dark); font-weight:600; }
+
+@media (min-width:480px) {
+  header { padding:56px 24px 0; }
+  .summary-card, .cards-list, .paused-cards-list { margin-left:24px; margin-right:24px; }
+  .block-label, .paused-toggle { padding-left:24px; padding-right:24px; }
+  .manage-btn { width:calc(100% - 48px); margin-left:24px; margin-right:24px; }
+  .edit-banner { margin-left:24px; margin-right:24px; }
+  .completed-banner { margin-left:24px; margin-right:24px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title-row">
+    <div class="header-title-block">
+      <h1>Suplementos</h1>
+      <div class="header-day-label" id="header-day-label">Hoy</div>
+      <div class="header-count" id="header-count"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="header-icon-btn" id="history-btn" onclick="openHistoryModal()" title="Historial">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="3" width="14" height="18" rx="2" stroke="#8E8E93" stroke-width="1.6"/><path d="M9 7h6M9 11h6M9 15h4" stroke="#8E8E93" stroke-width="1.6" stroke-linecap="round"/><path d="M8 7h.01" stroke="#8E8E93" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <button id="discard-btn" onclick="discardEditMode()" style="display:none;background:var(--border);border:none;border-radius:50%;width:38px;height:38px;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="var(--ink-2)" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <button class="edit-toggle-btn" id="edit-toggle-btn" onclick="toggleEditMode()">
+        <div class="edit-icon" id="edit-icon-el">
+          <svg id="pencil-svg" width="24" height="24" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.013 2.513a1.75 1.75 0 0 1 2.475 2.474L5.3 13.175l-3.396.766.766-3.396 8.343-8.032Z" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span id="edit-toggle-label" style="display:none;background:var(--accent);border-radius:50%;width:38px;height:38px;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9l4.5 4.5L15 5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>
+    </div>
+  </div>
+  <div class="header-progress-wrap" id="header-progress-wrap">
+    <div class="header-progress-label" id="header-progress-label"></div>
+    <div class="header-progress-bar"><div class="header-progress-fill" id="header-progress-fill" style="width:0%"></div></div>
+  </div>
+</header>
+
+<div class="edit-banner">Modo edición — tocá para editar, arrastrá para reordenar</div>
+
+<div class="summary-card" style="display:none">
+  <div class="summary-text">
+    <div class="summary-date" id="summary-date"></div>
+    <div class="summary-label" id="summary-label">
+      tomados<span id="summary-count">0 de 0</span>
+    </div>
+  </div>
+  <div class="ring-wrap">
+    <svg width="58" height="58" viewBox="0 0 58 58">
+      <circle class="ring-track" cx="29" cy="29" r="23"/>
+      <circle class="ring-fill" id="ring-fill" cx="29" cy="29" r="23" stroke-dasharray="144.5" stroke-dashoffset="144.5"/>
+    </svg>
+    <div class="ring-label">
+      <div class="ring-num" id="ring-num">0</div>
+      <div class="ring-pct">%</div>
+    </div>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<!-- History modal -->
+<div class="modal-overlay" id="history-modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3 style="margin-bottom:16px">Historial</h3>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- Note modal -->
+<div class="modal-overlay" id="note-modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3 id="note-modal-title"></h3>
+    <div class="modal-sub">Nota personal — reemplaza la descripción</div>
+    <textarea id="note-textarea" placeholder="Escribe notas sobre este suplemento…"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeNoteModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveNote()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="edit-modal-overlay">
+  <div class="modal-sheet">
+    <div style="padding:0 0 4px;flex-shrink:0">
+      <div class="modal-handle"></div>
+      <div style="margin-bottom:4px">
+        <h3 style="margin-bottom:0">Editar suplemento</h3>
+      </div>
+      <div class="modal-sub" id="edit-modal-sub"></div>
+    </div>
+    <div class="modal-sheet-scroll">
+      <div id="delete-confirm-banner" style="display:none;background:var(--accent-light);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:0.84rem;font-weight:600;color:var(--accent);margin-bottom:10px">¿Eliminar este suplemento?</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="document.getElementById('delete-confirm-banner').style.display='none'" style="flex:1;background:var(--surface);border:none;border-radius:var(--radius-sm);padding:9px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:500;color:var(--ink-2);cursor:pointer">Cancelar</button>
+          <button onclick="confirmDeleteSupp()" style="flex:1;background:var(--accent);border:none;border-radius:var(--radius-sm);padding:9px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:600;color:white;cursor:pointer">Sí, eliminar</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Nombre</label>
+        <input class="form-input" id="edit-name" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Formato</label>
+        <div class="pill-picker" id="edit-pill-picker"></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Horario</label>
+        <select class="form-select" id="edit-block"></select>
+        <div id="edit-custom-time-row" style="display:none;margin-top:8px">
+          <input type="time" class="form-input" id="edit-custom-time" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Frecuencia</label>
+        <div style="display:flex;gap:8px" id="edit-freq-picker">
+          <button type="button" class="freq-opt selected" data-freq="daily">Diaria</button>
+          <button type="button" class="freq-opt" data-freq="lmv">L M V</button>
+          <button type="button" class="freq-opt" data-freq="mjs">M J S</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Razón / recordatorio</label>
+        <input class="form-input" id="edit-reason" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Nota personal (opcional)</label>
+        <textarea class="form-input" id="edit-note" rows="2" placeholder="Tu nota personal sobre este suplemento…" style="resize:none;line-height:1.5"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tag (opcional)</label>
+        <input class="form-input" id="edit-tag" />
+      </div>
+      <input type="hidden" id="edit-situational" value="false">
+    </div>
+    <div class="modal-sheet-footer">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn-primary" onclick="saveEdit()">Guardar</button>
+        <button class="btn-pause" onclick="pauseSupp()">Pausar</button>
+        <button class="btn-danger" onclick="deleteSupp()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add modal -->
+<div class="modal-overlay" id="add-modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3>Agregar suplemento</h3>
+    <div class="modal-sub">Se suma a tu rutina diaria</div>
+    <div class="form-row">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" id="add-name" placeholder="Ej: Vitamina C" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Formato</label>
+      <div class="pill-picker" id="add-pill-picker"></div>
+    </div>
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Horario</label>
+        <select class="form-select" id="add-block"></select>
+      </div>
+      <div id="add-custom-time-row" style="display:none;margin-top:8px">
+        <input type="time" class="form-input" id="add-custom-time" />
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Frecuencia</label>
+      <div style="display:flex;gap:8px" id="add-freq-picker">
+        <button type="button" class="freq-opt selected" data-freq="daily">Diaria</button>
+        <button type="button" class="freq-opt" data-freq="lmv">L M V</button>
+        <button type="button" class="freq-opt" data-freq="mjs">M J S</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Razón / recordatorio</label>
+      <input class="form-input" id="add-reason" placeholder="Para qué sirve, cómo tomarlo…" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Tag (opcional)</label>
+      <input class="form-input" id="add-tag" placeholder="Ej: Con grasa" />
+    </div>
+    <input type="hidden" id="add-situational" value="false">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAddModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveNewSupp()">Agregar</button>
+    </div>
+    <div class="manage-list" id="manage-list"></div>
+  </div>
+</div>
+
+<!-- Reactivar modal -->
+<div class="modal-overlay" id="reactivar-modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3 id="reactivar-title">Reactivar suplemento</h3>
+    <div class="modal-sub">Elegí en qué horario lo volvés a incluir</div>
+    <div class="form-row">
+      <label class="form-label">Horario</label>
+      <select class="form-select" id="reactivar-block">
+        <option value="ayunas">Antes del desayuno</option>
+        <option value="desayuno">Desayuno</option>
+        <option value="almuerzo">Almuerzo</option>
+        <option value="merienda">Merienda</option>
+        <option value="cena">Cena</option>
+        <option value="dormir">Antes de dormir</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeReactivarModal()">Cancelar</button>
+      <button class="btn-primary" onclick="confirmReactivar()">Reactivar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Block sort order by hour (for custom time blocks)
+const BLOCK_HOUR_MAP = { ayunas:7, desayuno:8, almuerzo:13, merienda:17, cena:21, dormir:23 };
+
+const DEFAULT_BLOCKS = [
+  { id:'ayunas', title:'Antes del desayuno', sub:'Estómago vacío',
+    dot:'var(--morning-dot)', iconBg:'var(--morning)', tagBg:'var(--morning)', tagColor:'var(--morning-dot)', sleep:false,
+    items:[{ id:'nac', name:'NAC', form:'liquid', icon:'liquid', reason:'Mejor absorción en ayunas. Si cae pesado, pasarlo con el desayuno.', tag:'Ayunas', situational:false }]
+  },
+  { id:'desayuno', title:'Desayuno', sub:'Con comida grasa — huevos',
+    dot:'var(--morning-dot)', iconBg:'var(--morning)', tagBg:'var(--morning)', tagColor:'var(--morning-dot)', sleep:false,
+    items:[
+      { id:'selenio', name:'Selenio 200 mcg', form:'tablet', icon:'tablet', reason:'Indicado por endocrinóloga. Mejor con comida.', tag:'Con grasa', situational:false },
+      { id:'d3k2', name:'Vitamina D3 + K2', form:'softgel', icon:'softgel', reason:'Liposoluble — necesita grasa para absorberse.', tag:'Con grasa', situational:false },
+      { id:'astaxantina', name:'Astaxantina', form:'softgel', icon:'softgel', reason:'Liposoluble — misma lógica que D3.', tag:'Con grasa', situational:false }
+    ]
+  },
+  { id:'almuerzo', title:'Almuerzo', sub:'Con palta o aceitunas',
+    dot:'var(--midday-dot)', iconBg:'var(--midday)', tagBg:'var(--midday)', tagColor:'var(--midday-dot)', sleep:false,
+    items:[
+      { id:'hierro', name:'Hierro bisglicinato', form:'capsule', icon:'capsule', reason:'Con comida. Con vitamina C. Evitar mate/café 1h antes y después.', tag:'+ Vit C', situational:false },
+      { id:'omega3', name:'Omega-3', form:'softgel', icon:'softgel', reason:'Liposoluble. Con palta o aceitunas.', tag:'Con grasa', situational:false },
+      { id:'pumpkin', name:'Pumpkin Seed Oil 400mg', form:'softgel', icon:'softgel', reason:'Liposoluble. Con palta o aceitunas.', tag:'Con grasa', situational:false }
+    ]
+  },
+  { id:'merienda', title:'Merienda', sub:'Media tarde',
+    dot:'var(--afternoon-dot)', iconBg:'var(--afternoon)', tagBg:'var(--afternoon)', tagColor:'var(--afternoon-dot)', sleep:false,
+    items:[
+      { id:'glowup', name:'Glow Up (colágeno tipo I/III)', form:'powder', icon:'powder', reason:'Resveratrol + CoQ10 + ácido hialurónico. Con vitamina C.', tag:'+ Vit C ideal', situational:false },
+      { id:'curflex', name:'Curflex Plus (UC-II)', form:'capsule', icon:'capsule', reason:'Colágeno tipo II para rodilla.', tag:'Flexible', situational:false },
+      { id:'5htp', name:'5-HTP', form:'capsule', icon:'capsule', reason:'Mejor entre comidas. No tomar con proteína.', tag:'A demanda', situational:true },
+      { id:'ltheanine', name:'L-Theanine', form:'capsule', icon:'capsule', reason:'Para estrés agudo puntual.', tag:'A demanda', situational:true }
+    ]
+  },
+  { id:'cena', title:'Cena', sub:'Con comida o poco después',
+    dot:'var(--night-dot)', iconBg:'var(--night)', tagBg:'var(--night)', tagColor:'var(--night-dot)', sleep:false,
+    items:[
+      { id:'b12', name:'Vitamina B12', form:'tablet', icon:'tablet', reason:'Separada de la mañana. Funciona bien de noche.', tag:'Noche', situational:false },
+      { id:'ashwagandha', name:'Ashwagandha', form:'capsule', icon:'capsule', reason:'Para cortisol crónico. Potencia el efecto calmante.', tag:'Noche', situational:false },
+      { id:'creatina', name:'Creatina HCl (1-2 cáps)', form:'capsule', icon:'capsule', reason:'Timing flexible. De noche o post-entreno.', tag:'Flexible', situational:false }
+    ]
+  },
+  { id:'dormir', title:'Antes de dormir', sub:'Con el estómago lleno',
+    dot:'var(--sleep-dot)', iconBg:'var(--pill-icon-bg)', tagBg:'var(--bg)', tagColor:'var(--ink-3)', sleep:false,
+    items:[
+      { id:'zinc', name:'Zinc bisglicinato', form:'tablet', icon:'tablet', reason:'Con la panza llena. Separado del hierro.', tag:'Con comida', situational:false },
+      { id:'magnesio', name:'Magnesio bisglicinato', form:'capsule', icon:'capsule', reason:'Relajante muscular y nervioso. Potencia el sueño.', tag:'Con zinc', situational:false }
+    ]
+  }
+];
+
+const BLOCK_TITLES = { ayunas:'Antes del desayuno', desayuno:'Desayuno', almuerzo:'Almuerzo', merienda:'Merienda', cena:'Cena', dormir:'Antes de dormir' };
+const FREQ_DAYS = { daily: null, lmv: [1,3,5], mjs: [2,4,6] };
+function isItemActiveToday(item) {
+  const freq = item.freq || 'daily';
+  if (freq === 'daily') return true;
+  const days = FREQ_DAYS[freq];
+  return days ? days.includes(new Date().getDay()) : true;
+}
+
+function populateBlockSelect(selectId, selectedValue, isSituational) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '';
+  blocks.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b.id; o.textContent = b.title;
+    sel.appendChild(o);
+  });
+  const oDemanda = document.createElement('option');
+  oDemanda.value = SITUATIONAL_BLOCK_ID; oDemanda.textContent = 'A demanda';
+  sel.appendChild(oDemanda);
+  const oNew = document.createElement('option');
+  oNew.value = '__new__'; oNew.textContent = '+ Otro horario…';
+  sel.appendChild(oNew);
+  if (isSituational) sel.value = SITUATIONAL_BLOCK_ID;
+  else if (selectedValue) sel.value = selectedValue;
+}
+
+function todayKey() { const d=new Date(); return `supp_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`; }
+function ls(k) { try { const s=localStorage.getItem(k); return s?JSON.parse(s):null; } catch(e){ return null; } }
+function ls_set(k,v) { try { localStorage.setItem(k,JSON.stringify(v)); } catch(e){} }
+
+let state = ls(todayKey()) || {};
+let blocks = ls('supp_blocks') || JSON.parse(JSON.stringify(DEFAULT_BLOCKS));
+let notes = ls('supp_notes') || {};
+let paused = ls('supp_paused') || [];
+let editMode = false;
+
+// ===== DRAG AND DROP =====
+let dragItemId = null;
+let dragBlockId = null;
+let dragEl = null;
+let didDrag = false;
+let touchStartY = 0;
+let touchStartX = 0;
+let touchHoldTimer = null;
+let touchHoldActive = false;
+let ghostEl = null;
+let ghostOffsetX = 0;
+let ghostOffsetY = 0;
+const DRAG_THRESHOLD = 8;
+const HOLD_DELAY = 220;
+const SCROLL_ZONE = 80;   // px from top/bottom edge that triggers scroll
+const SCROLL_SPEED = 8;   // px per tick
+let scrollInterval = null;
+
+function startAutoScroll(touchY) {
+  stopAutoScroll();
+  scrollInterval = setInterval(() => {
+    const vh = window.innerHeight;
+    if (touchY < SCROLL_ZONE) {
+      window.scrollBy(0, -SCROLL_SPEED * (1 - touchY / SCROLL_ZONE));
+    } else if (touchY > vh - SCROLL_ZONE) {
+      window.scrollBy(0, SCROLL_SPEED * (1 - (vh - touchY) / SCROLL_ZONE));
+    }
+  }, 16);
+}
+function stopAutoScroll() {
+  if (scrollInterval) { clearInterval(scrollInterval); scrollInterval = null; }
+}
+
+function createGhost(card, touchX, touchY) {
+  removeGhost();
+  const rect = card.getBoundingClientRect();
+  ghostEl = card.cloneNode(true);
+  ghostEl.id = 'drag-ghost';
+  ghostEl.style.width = rect.width + 'px';
+  ghostOffsetX = touchX - rect.left;
+  ghostOffsetY = touchY - rect.top;
+  document.body.appendChild(ghostEl);
+  moveGhost(touchX, touchY);
+}
+function moveGhost(x, y) {
+  if (!ghostEl) return;
+  ghostEl.style.left = (x - ghostOffsetX) + 'px';
+  ghostEl.style.top = (y - ghostOffsetY) + 'px';
+}
+function removeGhost() {
+  if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+  stopAutoScroll();
+}
+
+function onDragStart(e, itemId, blockId, card) {
+  dragItemId = itemId; dragBlockId = blockId; dragEl = card;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => card.classList.add('dragging'), 0);
+}
+function onDragEnd(e, card) {
+  card.classList.remove('dragging');
+  document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('drag-over-active'));
+}
+function onDragOverZone(e, dz) {
+  if (!dragItemId) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.drop-zone').forEach(d => d.classList.remove('drag-over-active'));
+  dz.classList.add('drag-over-active');
+}
+function onDropZone(e, toBlockId, afterItemId) {
+  e.preventDefault();
+  document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('drag-over-active'));
+  if (!dragItemId || (dragItemId === afterItemId)) return;
+  moveItem(dragItemId, toBlockId, afterItemId);
+  dragItemId = null; dragBlockId = null; dragEl = null;
+  render();
+}
+// Synthetic block IDs
+const SITUATIONAL_BLOCK_ID = '__situational__';
+const PAUSED_BLOCK_ID = '__paused__';
+
+function moveItem(itemId, toBlockId, afterItemId) {
+  let item = null;
+  let fromBlockId = null;
+  blocks.forEach(b => {
+    const idx = b.items.findIndex(i => i.id === itemId);
+    if (idx !== -1) { fromBlockId = b.id; item = b.items.splice(idx, 1)[0]; }
+  });
+  if (!item) return;
+
+  // Dropping INTO A demanda: mark situational, keep in original block
+  if (toBlockId === SITUATIONAL_BLOCK_ID) {
+    item.situational = true;
+    const origin = blocks.find(b => b.id === fromBlockId) || blocks[0];
+    origin.items.push(item);
+    ls_set('supp_blocks', blocks);
+    return;
+  }
+  if (toBlockId === PAUSED_BLOCK_ID) {
+    paused.push({ item, originalBlockId: fromBlockId });
+    ls_set('supp_paused', paused);
+    ls_set('supp_blocks', blocks);
+    return;
+  }
+
+  // Dropping OUT of A demanda (into a regular block): unmark situational
+  if (item.situational && toBlockId !== SITUATIONAL_BLOCK_ID) {
+    item.situational = false;
+  }
+
+  const tBlock = blocks.find(b => b.id === toBlockId);
+  if (!tBlock) return;
+  if (afterItemId) {
+    const idx = tBlock.items.findIndex(i => i.id === afterItemId);
+    tBlock.items.splice(idx + 1, 0, item);
+  } else {
+    tBlock.items.unshift(item);
+  }
+  ls_set('supp_blocks', blocks);
+}
+
+// Touch drag
+function setupTouchDrag(card, itemId, blockId) {
+  card.addEventListener('touchstart', e => {
+    if (!editMode) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    didDrag = false;
+    touchHoldActive = false;
+    touchHoldTimer = setTimeout(() => {
+      touchHoldActive = true;
+      dragItemId = itemId; dragBlockId = blockId; dragEl = card;
+      card.classList.add('dragging');
+      createGhost(card, touchStartX, touchStartY);
+      startAutoScroll(touchStartY);
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, HOLD_DELAY);
+  }, { passive: true });
+
+  card.addEventListener('touchmove', e => {
+    const touch = e.touches[0];
+    const dy = Math.abs(touch.clientY - touchStartY);
+    const dx = Math.abs(touch.clientX - touchStartX);
+    if (!touchHoldActive) {
+      if (dy > DRAG_THRESHOLD || dx > DRAG_THRESHOLD) clearTimeout(touchHoldTimer);
+      return;
+    }
+    if (dragEl !== card) return;
+    didDrag = true;
+    e.preventDefault();
+    moveGhost(touch.clientX, touch.clientY);
+    startAutoScroll(touch.clientY);
+    // hide ghost briefly to hit-test below it
+    if (ghostEl) ghostEl.style.display = 'none';
+    const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+    if (ghostEl) ghostEl.style.display = '';
+    document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('drag-over-active'));
+    for (const el of els) {
+      if (el.classList && el.classList.contains('drop-zone')) {
+        el.classList.add('drag-over-active'); break;
+      }
+    }
+  }, { passive: false });
+
+  card.addEventListener('touchend', e => {
+    clearTimeout(touchHoldTimer);
+    card.classList.remove('dragging');
+    removeGhost();
+    stopAutoScroll();
+    document.querySelectorAll('.drop-zone.drag-over-active').forEach(dz => {
+      dz.classList.remove('drag-over-active');
+      if (dragItemId) {
+        moveItem(dragItemId, dz.dataset.blockId, dz.dataset.afterId || null);
+        render();
+      }
+    });
+    const wasDrag = didDrag;
+    dragItemId = null; dragBlockId = null; dragEl = null;
+    didDrag = false; touchHoldActive = false;
+    if (wasDrag) e.preventDefault();
+  }, { passive: false });
+
+  card.addEventListener('touchcancel', () => {
+    clearTimeout(touchHoldTimer);
+    card.classList.remove('dragging');
+    removeGhost();
+    stopAutoScroll();
+    dragItemId = null; dragBlockId = null; dragEl = null;
+    didDrag = false; touchHoldActive = false;
+    document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('drag-over-active'));
+  }, { passive: true });
+}
+
+function getAllItems() { return blocks.flatMap(b=>b.items); }
+function getCheckedCount() { return getAllItems().filter(i=>state[i.id]).length; }
+function getTotalCount() { return getAllItems().length; }
+
+function formatDate() {
+  const d=new Date();
+  const days=['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO'];
+  const months=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  return `${days[d.getDay()]} ${d.getDate()} DE ${months[d.getMonth()]}`;
+}
+
+// === SELECTED DAY navigation ===
+const _today = new Date();
+let selectedDay = { year: _today.getFullYear(), month: _today.getMonth(), date: _today.getDate(), isToday: true };
+
+function getMandatoryCount() {
+  return blocks.flatMap(b=>b.items).filter(i=>!i.situational).length;
+}
+
+function getDayProgress(year, month, date) {
+  const key = `supp_${year}_${month}_${date}`;
+  const dayState = ls(key) || {};
+  const mandatory = blocks.flatMap(b=>b.items).filter(i=>!i.situational);
+  if (mandatory.length === 0) return { checked: 0, total: 0, pct: 0 };
+  const checked = mandatory.filter(i=>dayState[i.id]).length;
+  return { checked, total: mandatory.length, pct: Math.round((checked/mandatory.length)*100) };
+}
+
+
+
+function updateHeaderLabel() {
+  const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const d = new Date(selectedDay.year, selectedDay.month, selectedDay.date);
+  const dayName = DAYS_ES[d.getDay()];
+  const dateStr = `${dayName} ${selectedDay.date} de ${MONTHS_ES[selectedDay.month]}`;
+  document.getElementById('header-day-label').textContent = dateStr;
+  const prog = getDayProgress(selectedDay.year, selectedDay.month, selectedDay.date);
+  document.getElementById('header-count').textContent = '';
+  // progress bar
+  const pLabel = document.getElementById('header-progress-label');
+  const pFill = document.getElementById('header-progress-fill');
+  if (pLabel && pFill) {
+    if (prog.total > 0) {
+      pLabel.textContent = `${prog.checked}/${prog.total} tomados`;
+      pFill.style.width = prog.pct + '%';
+      pFill.style.background = '#3A7D52';
+    } else {
+      pLabel.textContent = '';
+      pFill.style.width = '0%';
+    }
+  }
+}
+
+function renderWeekCalendar() { /* removed — calendar replaced by history modal */ }
+
+
+function toggleEditMode() {
+  editMode = !editMode;
+  if (editMode) {
+    blocksSnapshot = JSON.stringify(blocks);
+  }
+  document.body.classList.toggle('edit-mode', editMode);
+  document.getElementById('pencil-svg').style.display = editMode ? 'none' : 'block';
+  document.getElementById('edit-icon-el').style.display = editMode ? 'none' : 'flex';
+  const lbl = document.getElementById('edit-toggle-label');
+  lbl.style.display = editMode ? 'flex' : 'none';
+  const discardBtn = document.getElementById('discard-btn');
+  discardBtn.style.display = editMode ? 'flex' : 'none';
+}
+
+let blocksSnapshot = null;
+function discardEditMode() {
+  if (blocksSnapshot) {
+    blocks = JSON.parse(blocksSnapshot);
+    ls_set('supp_blocks', blocks);
+    blocksSnapshot = null;
+  }
+  editMode = false;
+  document.body.classList.remove('edit-mode');
+  document.getElementById('pencil-svg').style.display = 'block';
+  document.getElementById('edit-icon-el').style.display = 'flex';
+  document.getElementById('edit-toggle-label').style.display = 'none';
+  document.getElementById('discard-btn').style.display = 'none';
+  render();
+}
+
+function updateSummary() {
+  renderWeekCalendar();
+  updateHeaderLabel();
+}
+
+function render() {
+  const content=document.getElementById('content');
+  content.innerHTML='';
+
+  // collect all situational items for the bottom group
+  const situationalItems = [];
+
+  blocks.forEach(block => {
+    const sit = block.items.filter(i => i.situational);
+    sit.forEach(i => { if (editMode || isItemActiveToday(i)) situationalItems.push({ item: i, block }); });
+
+    const regularItems = block.items.filter(i => !i.situational && isItemActiveToday(i));
+    const displayItems = editMode ? block.items.filter(i => !i.situational) : regularItems;
+    if (displayItems.length === 0 && !editMode) return;
+
+    const blockDiv=document.createElement('div');
+    blockDiv.className='block'+(block.sleep?' block-sleep':'');
+    blockDiv.innerHTML=`
+      <div class="block-label">
+        <div class="block-dot" style="background:${block.dot}"></div>
+        <div class="block-title">${block.title}</div>
+      </div>`;
+
+    const cardsList=document.createElement('div');
+    cardsList.className='cards-list';
+
+    const topDz = document.createElement('div');
+    topDz.className = 'drop-zone';
+    topDz.dataset.blockId = block.id;
+    topDz.dataset.afterId = '';
+    topDz.addEventListener('dragover', e => onDragOverZone(e, topDz));
+    topDz.addEventListener('dragleave', () => topDz.classList.remove('drag-over-active'));
+    topDz.addEventListener('drop', e => onDropZone(e, block.id, null));
+    cardsList.appendChild(topDz);
+
+    displayItems.forEach((item, idx) => {
+      const done=!!state[item.id];
+      const hasNote=!!(notes[item.id]&&notes[item.id].trim());
+      const card=document.createElement('div');
+      card.className='card'+(done?' done':'')+(item.situational?' situational':'');
+      card.dataset.itemId = item.id;
+      card.dataset.blockId = block.id;
+
+      card.innerHTML=`
+        <div class="drag-handle">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="4" r="1.3" fill="#8E8E93"/><circle cx="10" cy="4" r="1.3" fill="#8E8E93"/><circle cx="4" cy="7" r="1.3" fill="#8E8E93"/><circle cx="10" cy="7" r="1.3" fill="#8E8E93"/><circle cx="4" cy="10" r="1.3" fill="#8E8E93"/><circle cx="10" cy="10" r="1.3" fill="#8E8E93"/></svg>
+        </div>
+        <div class="card-icon" style="background:${block.iconBg}">${getPillSvg(item.form || item.icon)}</div>
+        <div class="card-body">
+          <div class="card-name">${item.name}</div>
+          <div class="card-reason">${hasNote?notes[item.id]:item.reason}</div>
+          ${item.tag?`<span class="tag" style="background:${block.tagBg};color:${block.tagColor}">${item.tag}</span>`:''}
+          <div class="status-badge ${done?'taken':'pending'}">${done?'Tomado':(item.situational?'Opcional':'Pendiente')}</div>
+        </div>
+        <div class="check-circle">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6L5 9L10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="card-edit-chevron">›</div>`;
+
+      card.setAttribute('draggable', editMode ? 'true' : 'false');
+      card.addEventListener('dragstart', e => { if (!editMode) { e.preventDefault(); return; } onDragStart(e, item.id, block.id, card); });
+      card.addEventListener('dragend', e => onDragEnd(e, card));
+      setupTouchDrag(card, item.id, block.id);
+      card.addEventListener('click', e => {
+        if (didDrag) return;
+        if(editMode) { openEditModal(item.id, block.id); return; }
+        toggleItem(item.id);
+      });
+      cardsList.appendChild(card);
+
+      const dz = document.createElement('div');
+      dz.className = 'drop-zone';
+      dz.dataset.blockId = block.id;
+      dz.dataset.afterId = item.id;
+      dz.addEventListener('dragover', e => onDragOverZone(e, dz));
+      dz.addEventListener('dragleave', () => dz.classList.remove('drag-over-active'));
+      dz.addEventListener('drop', e => onDropZone(e, block.id, item.id));
+      cardsList.appendChild(dz);
+    });
+
+    blockDiv.appendChild(cardsList);
+
+    const btn=document.createElement('button');
+    btn.className='manage-btn';
+    btn.innerHTML='<span style="font-size:1.1rem;line-height:1">+</span> Agregar suplemento';
+    btn.addEventListener('click', () => openAddModal(block.id));
+    blockDiv.appendChild(btn);
+
+    content.appendChild(blockDiv);
+  });
+
+  // A DEMANDA group
+  if (situationalItems.length > 0 || editMode) {
+    const sitBlock = document.createElement('div');
+    sitBlock.className = 'block';
+    sitBlock.innerHTML = `<div class="block-label"><div class="block-dot" style="background:var(--ink-3)"></div><div class="block-title">A demanda</div></div>`;
+    const sitList = document.createElement('div');
+    sitList.className = 'cards-list';
+
+    const topDzSit = document.createElement('div');
+    topDzSit.className = 'drop-zone';
+    topDzSit.dataset.blockId = SITUATIONAL_BLOCK_ID;
+    topDzSit.dataset.afterId = '';
+    topDzSit.addEventListener('dragover', e => onDragOverZone(e, topDzSit));
+    topDzSit.addEventListener('dragleave', () => topDzSit.classList.remove('drag-over-active'));
+    topDzSit.addEventListener('drop', e => onDropZone(e, SITUATIONAL_BLOCK_ID, null));
+    sitList.appendChild(topDzSit);
+
+    situationalItems.forEach(({ item, block }) => {
+      const done = !!state[item.id];
+      const hasNote = !!(notes[item.id] && notes[item.id].trim());
+      const card = document.createElement('div');
+      card.className = 'card situational' + (done ? ' done' : '');
+      card.dataset.itemId = item.id;
+      card.dataset.blockId = block.id;
+      card.innerHTML = `
+        <div class="drag-handle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="4" r="1.3" fill="#8E8E93"/><circle cx="10" cy="4" r="1.3" fill="#8E8E93"/><circle cx="4" cy="7" r="1.3" fill="#8E8E93"/><circle cx="10" cy="7" r="1.3" fill="#8E8E93"/><circle cx="4" cy="10" r="1.3" fill="#8E8E93"/><circle cx="10" cy="10" r="1.3" fill="#8E8E93"/></svg></div>
+        <div class="card-icon" style="background:var(--pill-icon-bg)">${getPillSvg(item.form || item.icon)}</div>
+        <div class="card-body">
+          <div class="card-name">${item.name}</div>
+          <div class="card-reason">${hasNote ? notes[item.id] : item.reason}</div>
+        </div>
+        <div class="check-circle"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-edit-chevron">›</div>`;
+      card.setAttribute('draggable', 'true');
+      card.addEventListener('dragstart', e => { if (!editMode) { e.preventDefault(); return; } onDragStart(e, item.id, block.id, card); });
+      card.addEventListener('dragend', e => onDragEnd(e, card));
+      setupTouchDrag(card, item.id, block.id);
+      card.addEventListener('click', e => {
+        if (didDrag) return;
+        if (editMode) { openEditModal(item.id, block.id); return; }
+        toggleItem(item.id);
+      });
+      sitList.appendChild(card);
+
+      const dzSit = document.createElement('div');
+      dzSit.className = 'drop-zone';
+      dzSit.dataset.blockId = SITUATIONAL_BLOCK_ID;
+      dzSit.dataset.afterId = item.id;
+      dzSit.addEventListener('dragover', e => onDragOverZone(e, dzSit));
+      dzSit.addEventListener('dragleave', () => dzSit.classList.remove('drag-over-active'));
+      dzSit.addEventListener('drop', e => onDropZone(e, SITUATIONAL_BLOCK_ID, item.id));
+      sitList.appendChild(dzSit);
+    });
+    sitBlock.appendChild(sitList);
+    const sitAddBtn = document.createElement('button');
+    sitAddBtn.className = 'manage-btn';
+    sitAddBtn.innerHTML = '<span style="font-size:1.1rem;line-height:1">+</span> Agregar suplemento';
+    sitAddBtn.addEventListener('click', () => openAddModal(SITUATIONAL_BLOCK_ID));
+    sitBlock.appendChild(sitAddBtn);
+    content.appendChild(sitBlock);
+  }
+
+  renderPausedSection(content);
+
+  const banner=document.createElement('div');
+  const checked=getCheckedCount(), total=getTotalCount();
+  banner.className='completed-banner'+(checked===total&&total>0?' show':'');
+  banner.innerHTML=`<div class="emoji">🎉</div><p>¡Tomaste todos los suplementos de hoy!</p>`;
+  content.appendChild(banner);
+
+  updateSummary();
+}
+
+function renderPausedSection(container) {
+  if(paused.length===0) return;
+  const section=document.createElement('div');
+  section.className='paused-section';
+  const toggle=document.createElement('div');
+  toggle.className='paused-toggle';
+  toggle.innerHTML=`<div class="paused-toggle-dot"></div><div class="paused-toggle-title">Pausados</div><span class="paused-toggle-count">${paused.length}</span><span class="paused-chevron" id="paused-chevron">▾</span>`;
+  const list=document.createElement('div');
+  list.className='paused-list';
+  if (editMode) { list.classList.add('edit-expanded'); list.style.display = 'block'; }
+  const cl=document.createElement('div');
+  cl.className='paused-cards-list';
+
+  // top drop zone for pausing via drag
+  if (editMode) {
+    const topDzP = document.createElement('div');
+    topDzP.className = 'drop-zone';
+    topDzP.dataset.blockId = PAUSED_BLOCK_ID;
+    topDzP.dataset.afterId = '';
+    topDzP.addEventListener('dragover', e => onDragOverZone(e, topDzP));
+    topDzP.addEventListener('dragleave', () => topDzP.classList.remove('drag-over-active'));
+    topDzP.addEventListener('drop', e => onDropZone(e, PAUSED_BLOCK_ID, null));
+    cl.appendChild(topDzP);
+  }
+
+  paused.forEach(entry => {
+    const item=entry.item;
+    const card=document.createElement('div');
+    card.className='paused-card';
+    card.innerHTML=`<div class="paused-card-icon" style="background:var(--bg);display:flex;align-items:center;justify-content:center">${getPillSvg(item.form || item.icon)}</div><div class="paused-card-info"><div class="paused-card-name">${item.name}</div><div class="paused-card-block">${BLOCK_TITLES[entry.originalBlockId]||entry.originalBlockId}</div></div><button class="reactivar-btn" data-id="${item.id}">Reactivar</button>`;
+    card.querySelector('.reactivar-btn').addEventListener('click', () => openReactivarModal(item.id));
+    cl.appendChild(card);
+
+    if (editMode) {
+      const dzP = document.createElement('div');
+      dzP.className = 'drop-zone';
+      dzP.dataset.blockId = PAUSED_BLOCK_ID;
+      dzP.dataset.afterId = item.id;
+      dzP.addEventListener('dragover', e => onDragOverZone(e, dzP));
+      dzP.addEventListener('dragleave', () => dzP.classList.remove('drag-over-active'));
+      dzP.addEventListener('drop', e => onDropZone(e, PAUSED_BLOCK_ID, item.id));
+      cl.appendChild(dzP);
+    }
+  });
+  list.appendChild(cl);
+  if (!editMode) toggle.addEventListener('click', () => { list.classList.toggle('open'); document.getElementById('paused-chevron').classList.toggle('open'); });
+  section.appendChild(toggle);
+  section.appendChild(list);
+  container.appendChild(section);
+}
+
+function selectedDayKey() {
+  return `supp_${selectedDay.year}_${selectedDay.month}_${selectedDay.date}`;
+}
+function toggleItem(id) {
+  if (!selectedDay.isToday) return; // past days are read-only
+  state[id]=!state[id];
+  ls_set(selectedDayKey(), state);
+  render();
+}
+
+// === PILL PICKER ===
+const PILL_TYPES = [
+  { id:'capsule',   label:'Cápsula',   svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="10" width="20" height="8" rx="4" fill="#D6E8FB" stroke="#5B9BD5" stroke-width="1.5"/><rect x="4" y="10" width="10" height="8" rx="4" fill="#5B9BD5"/></svg>` },
+  { id:'tablet',    label:'Comprimido', svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="9" fill="#F0F0F5" stroke="#8E8E93" stroke-width="1.5"/><line x1="14" y1="6" x2="14" y2="22" stroke="#8E8E93" stroke-width="1.2"/></svg>` },
+  { id:'softgel',   label:'Softgel',   svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><ellipse cx="14" cy="14" rx="7" ry="9" fill="#FFF3CD" stroke="#E6A817" stroke-width="1.5"/></svg>` },
+  { id:'drop',      label:'Gota',      svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 5C14 5 7 13 7 17a7 7 0 0014 0c0-4-7-12-7-12z" fill="#D6F0FF" stroke="#3AA0D8" stroke-width="1.5"/></svg>` },
+  { id:'powder',    label:'Polvo',     svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="7" y="14" width="14" height="8" rx="2" fill="#F9E8FF" stroke="#A855C8" stroke-width="1.5"/><path d="M10 14v-3a4 4 0 018 0v3" stroke="#A855C8" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+  { id:'liquid',    label:'Líquido',   svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="4" width="8" height="3" rx="1.5" fill="#C8EDD6" stroke="#3A7D52" stroke-width="1.3"/><rect x="8" y="7" width="12" height="16" rx="3" fill="#C8EDD6" stroke="#3A7D52" stroke-width="1.5"/><path d="M8 15h12" stroke="#3A7D52" stroke-width="1" stroke-dasharray="2 2"/></svg>` },
+  { id:'gummy',     label:'Gominola',  svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="7" y="7" width="14" height="14" rx="5" fill="#FFD6D6" stroke="#E0444A" stroke-width="1.5"/></svg>` },
+  { id:'spray',     label:'Spray',     svg:`<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="10" y="10" width="8" height="13" rx="2" fill="#E8F2FF" stroke="#007AFF" stroke-width="1.5"/><rect x="13" y="7" width="5" height="4" rx="1" fill="#E8F2FF" stroke="#007AFF" stroke-width="1.3"/><path d="M18 9l3-2" stroke="#007AFF" stroke-width="1.3" stroke-linecap="round"/><path d="M19 11l3 0" stroke="#007AFF" stroke-width="1.3" stroke-linecap="round"/></svg>` },
+];
+
+function getPillSvg(formId) {
+  const pt = PILL_TYPES.find(p => p.id === (formId || 'capsule'));
+  return pt ? pt.svg : PILL_TYPES[0].svg;
+}
+
+let editSelectedPill = 'capsule';
+let addSelectedPill = 'capsule';
+let editSelectedFreq = 'daily';
+let addSelectedFreq = 'daily';
+function setupFreqPicker(containerId, initial, onChange) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.querySelectorAll('.freq-opt').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.freq === initial);
+    btn.onclick = () => {
+      container.querySelectorAll('.freq-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      onChange(btn.dataset.freq);
+    };
+  });
+}
+
+function renderPillPicker(containerId, selectedId, onSelect) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  PILL_TYPES.forEach(pt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pill-opt' + (pt.id === selectedId ? ' selected' : '');
+    btn.title = pt.label;
+    btn.innerHTML = pt.svg;
+    btn.addEventListener('click', () => {
+      onSelect(pt.id);
+      renderPillPicker(containerId, pt.id, onSelect);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function pillToIcon(pillId) {
+  return pillId || 'capsule'; // store form id directly
+}
+
+// NOTE MODAL
+let currentNoteId=null;
+function openNoteModal(id,name,defaultReason) { currentNoteId=id; document.getElementById('note-modal-title').textContent=name; document.getElementById('note-textarea').value=notes[id]||''; document.getElementById('note-textarea').placeholder=defaultReason; document.getElementById('note-modal-overlay').classList.add('open'); }
+function closeNoteModal() { document.getElementById('note-modal-overlay').classList.remove('open'); currentNoteId=null; }
+function saveNote() { if(!currentNoteId) return; const val=document.getElementById('note-textarea').value.trim(); if(val) notes[currentNoteId]=val; else delete notes[currentNoteId]; ls_set('supp_notes',notes); closeNoteModal(); render(); }
+document.getElementById('note-modal-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeNoteModal(); });
+
+// EDIT MODAL
+let editItemId=null, editBlockId=null;
+function openEditModal(itemId,blockId) {
+  const block=blocks.find(b=>b.id===blockId); if(!block) return;
+  const item=block.items.find(i=>i.id===itemId); if(!item) return;
+  editItemId=itemId; editBlockId=blockId;
+  document.getElementById('edit-modal-sub').textContent=block.title;
+  document.getElementById('edit-name').value=item.name;
+  populateBlockSelect('edit-block', blockId, !!item.situational);
+  const editBlockSel = document.getElementById('edit-block');
+  const editCustomRow = document.getElementById('edit-custom-time-row');
+  editCustomRow.style.display = editBlockSel.value === '__new__' ? 'block' : 'none';
+  document.getElementById('edit-custom-time').value = '';
+  editBlockSel.onchange = function() {
+    editCustomRow.style.display = this.value === '__new__' ? 'block' : 'none';
+  };
+  document.getElementById('edit-reason').value=item.reason;
+  document.getElementById('edit-note').value=notes[itemId]||'';
+  document.getElementById('edit-tag').value=item.tag||'';
+  editSelectedFreq = item.freq || 'daily';
+  setupFreqPicker('edit-freq-picker', editSelectedFreq, f => { editSelectedFreq = f; });
+  editSelectedPill = item.form || item.icon || 'capsule';
+  renderPillPicker('edit-pill-picker', editSelectedPill, id => { editSelectedPill = id; });
+  document.getElementById('edit-modal-overlay').classList.add('open');
+}
+function closeEditModal() { document.getElementById('edit-modal-overlay').classList.remove('open'); editItemId=null; editBlockId=null; const b=document.getElementById('delete-confirm-banner'); if(b) b.style.display='none'; }
+function saveEdit() {
+  if(!editItemId) return;
+  const newName=document.getElementById('edit-name').value.trim(); if(!newName) { document.getElementById('edit-name').focus(); return; }
+  const noteVal=document.getElementById('edit-note').value.trim();
+  if(noteVal) notes[editItemId]=noteVal; else delete notes[editItemId];
+  ls_set('supp_notes',notes);
+  let selectedBlock = document.getElementById('edit-block').value;
+  const isSituational = selectedBlock === SITUATIONAL_BLOCK_ID;
+  if (selectedBlock === '__new__') {
+    const timeVal = document.getElementById('edit-custom-time').value;
+    if (!timeVal) { document.getElementById('edit-custom-time').focus(); return; }
+    const [hh, mm] = timeVal.split(':').map(Number);
+    const hour = hh + mm/60;
+    const timeLabel = String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+    selectedBlock = 'custom_block_' + timeVal.replace(':','');
+    if (!blocks.find(b=>b.id===selectedBlock)) {
+      let dot='var(--night-dot)', bg='var(--night)';
+      if (hour < 10) { dot='var(--morning-dot)'; bg='var(--morning)'; }
+      else if (hour < 14) { dot='var(--midday-dot)'; bg='var(--midday)'; }
+      else if (hour < 19) { dot='var(--afternoon-dot)'; bg='var(--afternoon)'; }
+      const newBlock = { id:selectedBlock, title:timeLabel, sub:'', dot, iconBg:bg, tagBg:bg, tagColor:dot, sleep:false, customHour:hour, items:[] };
+      let insertIdx = blocks.length;
+      for (let i=0;i<blocks.length;i++) {
+        const bHour = BLOCK_HOUR_MAP[blocks[i].id] ?? (blocks[i].customHour ?? 99);
+        if (bHour > hour) { insertIdx=i; break; }
+      }
+      blocks.splice(insertIdx, 0, newBlock);
+    }
+  }
+  const realBlockId = isSituational ? editBlockId : selectedBlock;
+  const updated={ id:editItemId, name:newName, form:editSelectedPill, icon:editSelectedPill, freq:editSelectedFreq, reason:document.getElementById('edit-reason').value.trim(), tag:document.getElementById('edit-tag').value.trim(), situational:isSituational };
+  blocks.forEach(b=>{b.items=b.items.filter(i=>i.id!==editItemId)});
+  const target=blocks.find(b=>b.id===realBlockId); if(target) target.items.push(updated);
+  ls_set('supp_blocks',blocks); closeEditModal(); render();
+}
+function pauseSupp() {
+  if(!editItemId) return;
+  let pausedItem=null, originalBlockId=editBlockId;
+  blocks.forEach(b=>{ const idx=b.items.findIndex(i=>i.id===editItemId); if(idx!==-1){pausedItem=b.items[idx]; originalBlockId=b.id; b.items.splice(idx,1);} });
+  if(pausedItem){paused.push({item:pausedItem,originalBlockId}); ls_set('supp_paused',paused); ls_set('supp_blocks',blocks);}
+  closeEditModal(); render();
+}
+function deleteSupp() {
+  if(!editItemId) return;
+  const banner = document.getElementById('delete-confirm-banner');
+  banner.style.display = banner.style.display === 'none' ? 'block' : 'none';
+}
+function confirmDeleteSupp() {
+  if(!editItemId) return;
+  blocks.forEach(b=>{b.items=b.items.filter(i=>i.id!==editItemId)}); delete notes[editItemId]; delete state[editItemId];
+  ls_set('supp_blocks',blocks); ls_set('supp_notes',notes); ls_set(todayKey(),state);
+  closeEditModal(); render();
+}
+document.getElementById('edit-modal-overlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeEditModal(); });
+
+// ADD MODAL
+function openAddModal(blockId) {
+  populateBlockSelect('add-block', blockId, false);
+  const addBlockSel = document.getElementById('add-block');
+  const customRow = document.getElementById('add-custom-time-row');
+  customRow.style.display = 'none';
+  addBlockSel.onchange = function() {
+    customRow.style.display = this.value === '__new__' ? 'block' : 'none';
+  };
+  ['add-name','add-reason','add-tag'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('add-custom-time').value='';
+  document.getElementById('manage-list').innerHTML='';
+  addSelectedFreq = 'daily';
+  setupFreqPicker('add-freq-picker', addSelectedFreq, f => { addSelectedFreq = f; });
+  addSelectedPill = 'capsule';
+  renderPillPicker('add-pill-picker', addSelectedPill, id => { addSelectedPill = id; });
+  document.getElementById('add-modal-overlay').classList.add('open');
+}
+function closeAddModal() { document.getElementById('add-modal-overlay').classList.remove('open'); }
+function saveNewSupp() {
+  const name=document.getElementById('add-name').value.trim(); if(!name){document.getElementById('add-name').focus();return;}
+  let blockId=document.getElementById('add-block').value;
+  const isSituationalAdd = blockId === SITUATIONAL_BLOCK_ID;
+
+  if (blockId === '__new__') {
+    const timeVal = document.getElementById('add-custom-time').value;
+    if (!timeVal) { document.getElementById('add-custom-time').focus(); return; }
+    const [hh, mm] = timeVal.split(':').map(Number);
+    const hour = hh + mm/60;
+    const timeLabel = String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+    blockId = 'custom_block_' + timeVal.replace(':','');
+    if (!blocks.find(b=>b.id===blockId)) {
+      let dot='var(--night-dot)', bg='var(--night)';
+      if (hour < 10) { dot='var(--morning-dot)'; bg='var(--morning)'; }
+      else if (hour < 14) { dot='var(--midday-dot)'; bg='var(--midday)'; }
+      else if (hour < 19) { dot='var(--afternoon-dot)'; bg='var(--afternoon)'; }
+      const newBlock = { id:blockId, title:timeLabel, sub:'', dot, iconBg:bg, tagBg:bg, tagColor:dot, sleep:false, customHour:hour, items:[] };
+      let insertIdx = blocks.length;
+      for (let i=0;i<blocks.length;i++) {
+        const bHour = BLOCK_HOUR_MAP[blocks[i].id] ?? (blocks[i].customHour ?? 99);
+        if (bHour > hour) { insertIdx=i; break; }
+      }
+      blocks.splice(insertIdx, 0, newBlock);
+    }
+  }
+
+  // For "A demanda": add to first block but mark situational
+  const realAddBlockId = isSituationalAdd ? (blocks[0] ? blocks[0].id : blockId) : blockId;
+  const block=blocks.find(b=>b.id===realAddBlockId); if(!block) return;
+  block.items.push({id:'custom_'+Date.now(), name, form:addSelectedPill, icon:addSelectedPill, freq:addSelectedFreq, reason:document.getElementById('add-reason').value.trim(), tag:document.getElementById('add-tag').value.trim(), situational:isSituationalAdd});
+  ls_set('supp_blocks',blocks);
+  closeAddModal();
+  render();
+}
+function renderManageList() {
+  const list=document.getElementById('manage-list');
+  const allItems=blocks.flatMap(b=>b.items.map(i=>({...i,blockTitle:b.title})));
+  if(!allItems.length){list.innerHTML='';return;}
+  list.innerHTML='<div style="font-size:0.7rem;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;margin-top:16px">Suplementos actuales</div>';
+  allItems.forEach(item=>{
+    const div=document.createElement('div'); div.className='manage-item';
+    div.innerHTML=`<div style="font-size:1rem">${item.icon}</div><div class="manage-item-info"><div class="manage-item-name">${item.name}</div><div class="manage-item-block">${item.blockTitle}</div></div><button class="manage-delete" data-id="${item.id}">✕</button>`;
+    div.querySelector('.manage-delete').addEventListener('click',()=>{ if(confirm('¿Eliminar '+item.name+'?')){ blocks.forEach(b=>{b.items=b.items.filter(i=>i.id!==item.id)}); ls_set('supp_blocks',blocks); renderManageList(); render(); } });
+    list.appendChild(div);
+  });
+}
+document.getElementById('add-modal-overlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeAddModal(); });
+
+// REACTIVAR MODAL
+let reactivarItemId=null;
+function openReactivarModal(itemId) {
+  const entry=paused.find(e=>e.item.id===itemId); if(!entry) return;
+  reactivarItemId=itemId;
+  document.getElementById('reactivar-title').textContent='Reactivar '+entry.item.name;
+  document.getElementById('reactivar-block').value=entry.originalBlockId;
+  document.getElementById('reactivar-modal-overlay').classList.add('open');
+}
+function closeReactivarModal() { document.getElementById('reactivar-modal-overlay').classList.remove('open'); reactivarItemId=null; }
+function confirmReactivar() {
+  if(!reactivarItemId) return;
+  const idx=paused.findIndex(e=>e.item.id===reactivarItemId); if(idx===-1) return;
+  const entry=paused[idx];
+  const target=blocks.find(b=>b.id===document.getElementById('reactivar-block').value); if(!target) return;
+  target.items.push(entry.item); paused.splice(idx,1);
+  ls_set('supp_paused',paused); ls_set('supp_blocks',blocks);
+  closeReactivarModal(); render();
+}
+document.getElementById('reactivar-modal-overlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeReactivarModal(); });
+
+// HISTORY MODAL
+function openHistoryModal() {
+  renderHistoryList();
+  document.getElementById('history-modal-overlay').classList.add('open');
+  lockBodyScroll();
+}
+function closeHistoryModal() {
+  document.getElementById('history-modal-overlay').classList.remove('open');
+  unlockBodyScroll();
+}
+document.getElementById('history-modal-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeHistoryModal(); });
+
+function renderHistoryList() {
+  const DAYS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const today = new Date();
+  const container = document.getElementById('history-list');
+  let html = '';
+  for (let offset = 0; offset >= -6; offset--) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+    const key = `supp_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+    const dayState = ls(key) || {};
+    const allItems = blocks.flatMap(b => b.items);
+    const taken = allItems.filter(i => dayState[i.id]);
+    const mandatory = allItems.filter(i => !i.situational);
+    const takenMandatory = mandatory.filter(i => dayState[i.id]);
+    const label = offset === 0 ? 'Hoy' : offset === -1 ? 'Ayer' : `${DAYS_ES[d.getDay()]} ${d.getDate()} de ${MONTHS_ES[d.getMonth()]}`;
+    const pct = mandatory.length > 0 ? Math.round((takenMandatory.length / mandatory.length) * 100) : 0;
+    const dotColor = pct === 100 ? 'var(--check)' : pct > 0 ? 'var(--accent)' : 'var(--border)';
+    html += `<div style="margin-bottom:18px">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">`;
+    html += `<div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>`;
+    html += `<div style="font-size:0.84rem;font-weight:700;color:var(--ink);flex:1">${label}</div>`;
+    html += `<div style="font-size:0.72rem;color:var(--ink-3)">${takenMandatory.length}/${mandatory.length} obligatorios</div>`;
+    html += `</div>`;
+    if (taken.length === 0) {
+      html += `<div style="font-size:0.78rem;color:var(--ink-3);padding-left:16px">Ninguno registrado</div>`;
+    } else {
+      html += `<div style="display:flex;flex-direction:column;gap:4px;padding-left:16px">`;
+      taken.forEach(item => {
+        const block = blocks.find(b => b.items.some(i => i.id === item.id));
+        html += `<div style="display:flex;align-items:center;gap:8px">`;
+        html += `<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${getPillSvg(item.form || item.icon)}</div>`;
+        html += `<span style="font-size:0.78rem;color:var(--ink-2);font-weight:500">${item.name}</span>`;
+        if (item.situational) html += `<span style="font-size:0.65rem;color:var(--ink-3);margin-left:auto">opcional</span>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+    if (offset > -6) html += `<div style="height:1px;background:var(--border);margin-bottom:18px"></div>`;
+  }
+  container.innerHTML = html;
+}
+
+// add history modal to swipe-close setup below
+// === SWIPE-DOWN TO CLOSE MODALS ===
+function setupSwipeClose(sheet, closeFn) {
+  let startY = 0, currentY = 0, isDragging = false, startScrollTop = 0;
+  // find the scrollable inner element if it exists
+  function getScroller() {
+    return sheet.querySelector('.modal-sheet-scroll') || sheet;
+  }
+
+  sheet.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    const scroller = getScroller();
+    startScrollTop = scroller.scrollTop;
+    isDragging = false;
+  }, { passive: true });
+
+  sheet.addEventListener('touchmove', e => {
+    currentY = e.touches[0].clientY;
+    const dy = currentY - startY;
+    const scroller = getScroller();
+    const scrollTop = scroller.scrollTop;
+    const atTop = scrollTop <= 0;
+    const atBottom = scroller.scrollHeight - scroller.scrollTop <= scroller.clientHeight + 1;
+
+    if (isDragging) {
+      e.preventDefault();
+      const clampedDy = Math.max(0, dy);
+      sheet.classList.add('swiping');
+      sheet.style.transform = `translateY(${clampedDy}px)`;
+      return;
+    }
+
+    // Only start swipe-to-close when pulling down AND scroller is at the top
+    if (dy > 10 && atTop) {
+      isDragging = true;
+      e.preventDefault();
+      sheet.classList.add('swiping');
+      sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
+    }
+    // Otherwise let the scroller scroll naturally
+  }, { passive: false });
+
+  sheet.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    sheet.classList.remove('swiping');
+    const dy = currentY - startY;
+    sheet.style.transform = '';
+    if (dy > 80) closeFn();
+  });
+
+  sheet.addEventListener('touchcancel', () => {
+    isDragging = false;
+    sheet.classList.remove('swiping');
+    sheet.style.transform = '';
+  });
+}
+
+// Lock body scroll when any modal is open
+function lockBodyScroll() { document.body.style.overflow = 'hidden'; }
+function unlockBodyScroll() { document.body.style.overflow = ''; }
+
+// Patch open/close functions to lock/unlock scroll
+const _origCloseNote = closeNoteModal;
+closeNoteModal = function() { _origCloseNote(); unlockBodyScroll(); };
+const _origCloseEdit = closeEditModal;
+closeEditModal = function() { _origCloseEdit(); unlockBodyScroll(); };
+const _origCloseAdd = closeAddModal;
+closeAddModal = function() { _origCloseAdd(); unlockBodyScroll(); };
+const _origCloseReact = closeReactivarModal;
+closeReactivarModal = function() { _origCloseReact(); unlockBodyScroll(); };
+
+const _origOpenNote = openNoteModal;
+openNoteModal = function(...a) { _origOpenNote(...a); lockBodyScroll(); };
+const _origOpenEdit = openEditModal;
+openEditModal = function(...a) { _origOpenEdit(...a); lockBodyScroll(); };
+const _origOpenAdd = openAddModal;
+openAddModal = function(...a) { _origOpenAdd(...a); lockBodyScroll(); };
+const _origOpenReact = openReactivarModal;
+openReactivarModal = function(...a) { _origOpenReact(...a); lockBodyScroll(); };
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  const sheet = overlay.querySelector('.modal-sheet');
+  const overlayId = overlay.id;
+  const closeFns = {
+    'note-modal-overlay': () => closeNoteModal(),
+    'edit-modal-overlay': () => closeEditModal(),
+    'add-modal-overlay': () => closeAddModal(),
+    'reactivar-modal-overlay': () => closeReactivarModal(),
+    'history-modal-overlay': () => closeHistoryModal()
+  };
+  if (closeFns[overlayId]) setupSwipeClose(sheet, closeFns[overlayId]);
+});
+
+// reset selectedDay to today always (no calendar navigation)
+selectedDay = { year: _today.getFullYear(), month: _today.getMonth(), date: _today.getDate(), isToday: true };
+state = ls(todayKey()) || {};
+updateHeaderLabel();
+render();
+</script>
+</body>
+</html>
